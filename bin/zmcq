@@ -26,7 +26,7 @@ def main():
 
     print "Searching for {0}...".format(args.query[0])
 
-    response = mail.Search(query = args.query[0], attributes = {'types': 'contact'})
+    response = mail.Search(query = args.query[0], attributes = {'types':'contact', 'limit':args.limit})
 
     log.debug("Parsing response")
 
@@ -53,6 +53,7 @@ def parse():
     parser.add_argument('-s', '--server', help="Zimbra server hostname")
     parser.add_argument('-a', '--account', help="Zimbra account name")
     parser.add_argument('-p', '--password', help="Zimbra account password")
+    parser.add_argument('-l', '--limit', help="Search for at most [limit] contacts", default='100')
     parser.add_argument('--password_command', help="External command to retrieve password")
     parser.add_argument('--trace', help="Trace SOAP calls", action='store_true')
     parser.add_argument('-d', '--debug', help="Debug output", action='store_true')
@@ -83,6 +84,8 @@ def parse():
         args.password = config.get('zmc_account', 'password')
     if not args.password_command and config.has_option('zmc_account', 'password_command'):
         args.password = config.get('zmc_account', 'password_command')
+    if not args.limit and config.has_option('zmc_account', 'limit'):
+        args.limit = config.get('zmc_account', 'limit')
 
     if not args.password and args.password_command:
         args.password = os.popen(args.password_command).read().rstrip('\n')
