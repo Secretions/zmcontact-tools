@@ -1,0 +1,96 @@
+#!/usr/bin/python
+
+import ConfigParser
+import argparse
+import os
+import re
+
+import logging
+
+import zimbrasoap
+
+def main():
+    args = parse()
+
+    global log
+    log.debug("Running zmcq with the following running configuration:\n{0}".format(args))
+
+    log.debug("Establishing ZimbraSOAP object...")
+    mail = zimbrasoap.mail(server = args.server, trace=args.trace)
+    mail.namespace = 'urn:zimbraAccount'
+    log.debug("Authenticating as {0}".format(args.account))
+    mail.Auth(account = args.account, password = args.password)
+    mail.namespace = 'urn:zimbraMail'
+    log.debug("Running NoOp")
+    mail.NoOp()
+
+    print "Searching for {0}...".format(args.query[0])
+
+    response = mail.Search(query = args.query[0], attributes = {'types': 'contact'})
+
+    log.debug("Parsing response")
+
+    contacts = response.SearchResponse.children()
+    if not contacts:
+        log.debug("No contacts")
+        exit(0)
+
+    for contact in contacts:
+        if contact.get_name() == "cn":
+            attrs = mail.ParseAttributes(contact.children())
+            for key in mail.ParseAttributes(contact.children()):
+                if re.search('email', key):
+                    for address in attrs[key]:
+                        name = address
+                        if contact['fileAsStr']:
+                            name = contact['fileAsStr']
+                        print "{0}\t{1}\t({2} Zimbra)".format(address, name, args.account)
+                        
+def parse():
+    parser = argparse.ArgumentParser(description='zmcq - Zimbra Contact Query')
+    parser.add_argument('-c', '--config', help="Config file (default: /etc/zmc.conf, ~/.zmcrc)", 
+        nargs=1, default=['/etc/zmc.conf',os.path.expanduser('~/.zmcrc')])
+    parser.add_argument('-s', '--server', help="Zimbra server hostname")
+    parser.add_argument('-a', '--account', help="Zimbra account name")
+    parser.add_argument('-p', '--password', help="Zimbra account password")
+    parser.add_argument('--trace', help="Trace SOAP calls", action='store_true')
+    parser.add_argument('-d', '--debug', help="Debug output", action='store_true')
+    parser.add_argument('query', help='Query for contact search', nargs='*')
+    args = parser.parse_args()
+
+    global log
+    log = logging.getLogger('zmcq')
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter(fmt='%(levelname)s: [%(module)s] %(message)s'))
+    log.addHandler(handler)
+
+    if args.debug:
+        log.setLevel(logging.DEBUG)
+
+    log.debug("Loading configuration file(s) from: {0}".format(args.config))
+
+    config = ConfigParser.ConfigParser()
+    cfg_files = config.read(args.config)
+
+    log.debug("Found and loaded config variables from: {0}".format(cfg_files))
+
+    if not args.server and config.has_option('DEFAULT', 'server'):
+        args.server = config.get('DEFAULT', 'server')
+    if not args.account and config.has_option('DEFAULT', 'account'):
+        args.account = config.get('DEFAULT', 'account')
+    if not args.password and config.has_option('DEFAULT', 'password'):
+        args.password = config.get('DEFAULT', 'password')
+
+    for key in ['server', 'account', 'password']:
+        if not getattr(args, key):
+            print "No Zimbra {0}, aborting...".format(key)
+            exit(1)
+
+    if not args.query:
+        print "No query string requested, aborting..."
+        exit(1)
+
+    return args
+
+if __name__ == '__main__':
+    main()
