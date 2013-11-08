@@ -1,0 +1,21 @@
+#!/bin/sh
+
+# Copyright (c)2013 Joaquin Lopez <mrgus@disco-zombie.net>
+#
+# This is a shell script that calls a program. Seriously? License? copyright?
+
+# INSTRUCTIONS:
+#
+# Either move this into the path with your lbdb modules, or set your lbdb
+# "MODULES_PATH" to this file's location in ~/.lbdbrc.
+# By default, this will assume zmcq is in your path. If "zmcq" isn't in your 
+# path, set ZMCQ to the zmcq's location in ~/.lbdbrc
+
+m_zmc_query()
+{
+    if [[ -z "$ZMCQ" ]]; then
+        ZMCQ="zmcq"
+    fi
+
+    $ZMCQ "$1" | tail -n +2
+}
