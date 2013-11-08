@@ -53,6 +53,7 @@ def parse():
     parser.add_argument('-s', '--server', help="Zimbra server hostname")
     parser.add_argument('-a', '--account', help="Zimbra account name")
     parser.add_argument('-p', '--password', help="Zimbra account password")
+    parser.add_argument('--password_command', help="External command to retrieve password")
     parser.add_argument('--trace', help="Trace SOAP calls", action='store_true')
     parser.add_argument('-d', '--debug', help="Debug output", action='store_true')
     parser.add_argument('query', help='Query for contact search', nargs='*')
@@ -74,12 +75,17 @@ def parse():
 
     log.debug("Found and loaded config variables from: {0}".format(cfg_files))
 
-    if not args.server and config.has_option('DEFAULT', 'server'):
-        args.server = config.get('DEFAULT', 'server')
-    if not args.account and config.has_option('DEFAULT', 'account'):
-        args.account = config.get('DEFAULT', 'account')
-    if not args.password and config.has_option('DEFAULT', 'password'):
-        args.password = config.get('DEFAULT', 'password')
+    if not args.server and config.has_option('zmc_account', 'server'):
+        args.server = config.get('zmc_account', 'server')
+    if not args.account and config.has_option('zmc_account', 'account'):
+        args.account = config.get('zmc_account', 'account')
+    if not args.password and config.has_option('zmc_account', 'password'):
+        args.password = config.get('zmc_account', 'password')
+    if not args.password_command and config.has_option('zmc_account', 'password_command'):
+        args.password = config.get('zmc_account', 'password_command')
+
+    if not args.password and args.password_command:
+        args.password = os.popen(args.password_command).read().rstrip('\n')
 
     for key in ['server', 'account', 'password']:
         if not getattr(args, key):
