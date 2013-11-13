@@ -4,10 +4,9 @@
 # zmc_account section is mandatory
 # In the future, we should allow multiple accounts
 [zmc_account]
-server=zimbra.example.com               # Hostname for Zimbra server
-account=address@example.com             # Zimbra account name
-#password=password                      # Zimbra account password
-password_command="gpg -d ~/.password    # External command to retrieve account
-                                        # password. Recommend to avoid storing
-                                        # passwords in plain text.
-
+server=zimbra.example.com                     # Hostname for Zimbra server
+account=address@example.com                   # Zimbra account name
+#password=password                            # Zimbra account password
+password_command=gpg -dq --no-tty ~/.password # External command to retrieve
+                                              # account password. Useful to
+                                              # avoid storing in plaintext
