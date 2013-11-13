@@ -83,7 +83,7 @@ def parse():
     if not args.password and config.has_option('zmc_account', 'password'):
         args.password = config.get('zmc_account', 'password')
     if not args.password_command and config.has_option('zmc_account', 'password_command'):
-        args.password = config.get('zmc_account', 'password_command')
+        args.password_command = config.get('zmc_account', 'password_command')
     if not args.limit and config.has_option('zmc_account', 'limit'):
         args.limit = config.get('zmc_account', 'limit')
 
