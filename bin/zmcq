@@ -20,11 +20,25 @@ def main():
     mail.namespace = 'urn:zimbraAccount'
     log.debug("Authenticating as {0}".format(args.account))
     mail.Auth(account = args.account, password = args.password)
+
     mail.namespace = 'urn:zimbraMail'
+
     log.debug("Running NoOp")
     mail.NoOp()
 
+    link_ids = []
+    response = mail.GetFolder(attributes = {'visible':1, 'view':'contact' }, value = 'blah')
+
+    for link in response.link:
+        link_ids.append(link['id'])
+
     print "Searching for {0}...".format(args.query[0])
+
+    if len(link_ids):
+        args.query[0] = "{0} (".format(args.query[0])
+        for id in link_ids:
+            args.query[0] = "{0}inid:{1} OR ".format(args.query[0],id)
+        args.query[0] = "{0}is:local)".format(args.query[0])
 
     response = mail.Search(query = args.query[0], attributes = {'types':'contact', 'limit':args.limit})
 
